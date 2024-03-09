@@ -1,1 +1,1 @@
-find ~ -maxdepth 1 -user $(whoami) -exec chmod 775 {} \;
+find ~ -maxdepth 1 -type f -user $(whoami) -exec chmod 775 {} \;
