@@ -1,1 +1,2 @@
-find -iname '.blend*' 2>/dev/null
+find -iname -user $(whoami) '.blend*' 2>/dev/null
+
