@@ -1,0 +1,1 @@
+find ~ -ctime -1
