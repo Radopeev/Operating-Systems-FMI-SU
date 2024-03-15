@@ -1,1 +1,1 @@
-cut -d ':' -f 1 /etc/passwd > ~/file.txt
+cut -d ':' -f 1 /etc/passwd > ~/users.txt
