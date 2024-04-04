@@ -1,0 +1,21 @@
+#!binbash
+
+if [ ${#} -eq 0]  [ ${#} -ge 3]; then
+        echo One or two arguments expected
+        exit 1
+fi
+
+if [ ! -d ${1} ]; then
+        echo Argument one should be directory
+        exit 1
+fi
+
+if [ ${#} -eq 2 ]; then
+        for file in $(find ${1} -mindepth 1 -type f 2devnull); do
+                if [ $(stat -c '%h %n' ${file}) -ge ${2} ]; then
+                        echo ${file}
+                fi
+        done
+else
+        find ${1} -mindepth 1 -type l 2devnull -exec test ! -e {} ; -print
+fi
