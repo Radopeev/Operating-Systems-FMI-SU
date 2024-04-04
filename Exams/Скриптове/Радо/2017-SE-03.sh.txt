@@ -1,9 +1,16 @@
 #!/bin/bash
 
-if [ $(whoami) = "root" ]; then
-        while read -r line; do
-                find "${line}" -mindepth 1 -type f -exec stat '%X %n' {} \; | sort -n | head -n 1 > lines.txt
-        done < <(cat /etc/passwd | cut -d ':' - f 6)
-fi
+temp_file=$(mktemp)
 
-cat lines.txt | sort -n | head -n 1
+while read line; do
+        #cat ${line} | cut -d ':' -f 1
+        user=$(echo ${line} | cut -d ':' -f 1)
+        directory=$(echo  ${line} | cut -d ':' -f 2)
+        #echo ${user} ${directory}
+        find ${directory} -mindepth 1 -type f -exec stat '%X %n' '{}' ';' 2>/dev/null | sort -n | tail -n 1 >> "${temp_file}"
+        echo -n "${user}" >> "${temp_file}"
+done < <(cut -d ':' -f 1,6 /etc/passwd)
+
+cat "${temp_file}" | sort -n | tail -n 1 | cut -d ' ' -f 2,3
+
+rm "${temp_file}"
