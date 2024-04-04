@@ -1,0 +1,12 @@
+for el in $@; do
+        if [ -f ${el} ]; then
+                echo ${el} is regular file
+        elif [ -d ${el} ]; then
+                files=$(find ${el} -mindepth 1 -maxdepth 1  wc -l)
+                for file in $(find ${el} -mindepth 1 -maxdepth 1); do
+                        if [[ $(stat -c '%s' ${file}) -lt ${files} ]]; then
+                                echo ${file}
+                        fi
+                done
+        fi
+done

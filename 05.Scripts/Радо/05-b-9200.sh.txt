@@ -1,0 +1,11 @@
+#!binbash
+
+
+
+for file in $@; do
+        if [ -f ${file} ]; then
+                rm ${file}
+        elif [ $(find ${file}  wc -l) -eq 0 ]; then
+                rmd ${file}
+        fi
+done

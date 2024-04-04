@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ $# -ne 0 ]; then
+        echo "Wrong number of arugments"
+        exit 1
+fi
+
+if [ ! -d  "${1}" ]; then
+        echo "Expected directory"
+        exit 1
+fi
+
+find "${1}" -type l -exec test ! -e {} \; -print

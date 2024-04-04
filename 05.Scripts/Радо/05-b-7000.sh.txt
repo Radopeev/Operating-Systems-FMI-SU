@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ ${#} -eq 0 ]; then
+        echo "Expected at least one argument"
+        exit 1
+fi
+
+for arg in ${@}; do
+        if [ ! -f "${arg}" ]; then
+                echo "${arg} is not file"
+                exit 2
+        fi
+done
+
+echo "Enter string"
+read str
+
+for file in ${@}; do
+        encounters=$(cat "${file}" | grep "${str}" | wc -l)
+        if [ "${encounters}" -ne 0 ]; then
+                echo "${file} ${encounters}"
+        fi
+done
+

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ]; then
+        echo "One argument expected"
+        exit 1
+fi
+
+if [ ! -d "${1}" ]; then
+        echo "Argument one should be directory"
+        exit 1
+fi
+
+count=0
+
+while read -r file;do
+        if [ -x "${file}" ]; then
+                count=$(( count + 1 ))
+        fi
+done < <(find "${1}" -mindepth 1 -maxdepth 1 -type f)
+
+echo "${count}"

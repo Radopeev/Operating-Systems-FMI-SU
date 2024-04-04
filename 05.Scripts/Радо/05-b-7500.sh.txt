@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if ! [[ "${1}" =~ ^[0-9]+$ ]] || ! [[ "${2}" =~ ^[0-9]+$ ]]; then
+        echo "Expected 2 numbers"
+        exit 1
+fi
+
+number=$(( (RANDOM % $2) + $1 ))
+count=0
+
+while true; do
+        echo -n "Guess?"
+        read guess
+        count=$(( count+1))
+        if [ ${guess} -eq ${number} ]; then
+                echo "RIGHT! Guessed ${number} in ${count} tries!"
+                exit 0
+        elif [ ${guess} -lt ${number} ]; then
+                echo "...bigger!"
+        else
+                echo "...smaller!"
+        fi
+done
+
