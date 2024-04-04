@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ ${#} -ne 3 ]; then
+        echo "Three arguments expected"
+        exit 1
+fi
+
+if [ ! -d ${1} ]; then
+        echo "Arg 1 should be directory"
+        exit 1
+fi
+
+if [ ! -d ${2} ]; then
+        echo "Arg 2 should be directory"
+        exit 1
+fi
+
+if [ -z ${3} ]; then
+        echo "Arg 3 should be empty"
+        exit 1
+fi
+
+if [ "$(whoami)" = "root" ]; then
+        for file in $(find "${1}" -mindepth -type f 2>/dev/null); do
+                if [ $(echo "${file}" | awk -F '/' '{print $NF}' | grep -F "${3}" | wc -l) -gt 0 ]; then
+                        dir=$(echo "${file}" | cut -d '/' -f 2-)
+                        mkdir -p "${2}/${dir}"
+                        mv ${file} "${2}/${dir}"
+                fi
+        done
+fi
