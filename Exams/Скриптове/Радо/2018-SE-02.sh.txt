@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [ ${#} -ne 2 ]; then
+        echo "2 arguments expected"
+        exit 1
+fi
+
+if [ ! -f "${1}" ]; then
+        echo "Arg one should be regular file"
+        exit 1
+fi
+
+if [ ! -d "${2}" ]; then
+        echo "Arg two should be directory file"
+        exit 1
+fi
+
+if [ $(find "${2}" -mindepth 1 | wc -l) -ne 0 ]; then
+        echo "Directory should be empty"
+        exit 1
+fi
+
+
+cat "${1}" | cut -d ':' -f1 | sort | cut -d ' ' -f 1,2 | uniq | awk '{print $1" "$2";"NR}' >> $2/dict_txt
+
+while read -r line; do
+        name=$(echo "${line}" | cut -d ';' -f 1)
+        number=$(echo "${line}" | cut -d ';' -f 2)
+        cat "${1}" | sort | grep -F "${name}" | cut -d ':' -f 2 >> "${number}.txt"
+done < $2/dict_txt

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ]; then
+        exactly "One argument expected"
+        exit 1
+fi
+
+if [ ! -d ${1} ]; then
+        echo "Arg one should be dircetory"
+        exit 1
+fi
+
+friends=$(find "${1}" -midepth 3 -maxdepth 3 |sort |uniq)
+
+sum=$(mktemp)
+for friend in "${friend}"; do
+        echo "${friend}" $(find "${1}" -mindepth 3 -type f -printf "%p\n" | grep "${friend}" | xargs cat | wc -l) >> ${sum}
+done
+
+cat $sum | sort -k 2 -nr | head | cut -d ' ' -f 1
+
+rm ${sum}
+
