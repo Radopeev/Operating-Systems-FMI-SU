@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ]; then
+        echo "exactly one argument expected"
+        exit 1
+fi
+
+if [ ! -d "${1}" ]; then
+        echo "Directory expected"
+        exit 1
+fi
+
+archives=$(find "${1}" -mindepth 1 -maxdepth 1 -type f -name '*_report-*.tgz' -printf '%p %M@\n')
+last_execution=$(stat -c "%X" ${0})
+usable_archive=$(echo "${archives}" | awk '{if ($2>=${last_execution} print $1)')
+
+while read archive; do
+        name=$(echo "${archive}" | cut -d '_' -f 1)
+        timestamp=$(echo "${archive}" | cut -d '-' -f 2 | cut -d '.' -f 1)
+        while read line; do
+                grep -q -E "meow.txt" "${line}"
+                if [ ${?} -eq 0 ]; then
+                        dir=$(dirname "${archive}")
+                        mv "${dir}/${line}" "/extracted/${name}_${timestamp}.txt"
+                fi
+        done < <( tar -xf ${archive})
+done < <(echo "${usable_archive}")
