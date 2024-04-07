@@ -29,7 +29,7 @@ while read -r line; do
                         echo "${user}" >> $users
                 fi
         done < $lines
-        cat "${users}" | sort | uniq -c | sort -n
+        cat "${users}" | sort | uniq -c | sort -nr | head -n 5
         rm $users
         rm $lines
 done < $most_requested
