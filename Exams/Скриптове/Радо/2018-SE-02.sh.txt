@@ -21,7 +21,7 @@ if [ $(find "${2}" -mindepth 1 | wc -l) -ne 0 ]; then
 fi
 
 
-cat "${1}" | cut -d ':' -f1 | sort | cut -d ' ' -f 1,2 | uniq | awk '{print $1" "$2";"NR}' >> $2/dict_txt
+cat "${1}" | cut -d ':' -f1 | cut -d ' ' -f 1,2 | sort | uniq | awk '{print $1" "$2";"NR}' >> $2/dict_txt
 
 while read -r line; do
         name=$(echo "${line}" | cut -d ';' -f 1)
