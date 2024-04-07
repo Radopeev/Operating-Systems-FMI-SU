@@ -16,11 +16,11 @@ cat "${1}" | cut -d ' ' -f 2 | sort | uniq -c | sort -n -r -k 1 | head -n 3 > $m
 
 while read -r line; do
         domain=$(echo "${line}" | cut -d ' ' -f 2)
-        http2_0=$(cat "${1}" | grep -F "${domain}" | grep -F  "HTTP/2.0" | wc -l)
-        not_http2_0=$(cat "${1}" | grep -F "${domain}" | grep -vF  "HTTP/2.0" | wc -l)
+        http2_0=$(cat "${1}" | grep -F "^.* ${domain} .*" | grep -F  "GET|POST /[a-zA-Z]* HTTP/2.0" | wc -l)
+        not_http2_0=$(cat "${1}" | grep -F "^.* ${domain} .*" | grep -vF  "GET|POST /[a-zA-Z]* HTTP/2.0" | wc -l)
         echo "${domain} HTTP/2.0: ${http2_0} non-HTTP/2.0: ${not_http2_0}"
         lines=$(mktemp)
-        cat "${log_file}" | grep -F "${domain}" > $lines
+        cat "${log_file}" | grep -F "^.* ${domain} .*" > $lines
         users=$(mktemp)
         while read request; do
                 user=$(echo "${request}" | cut -d ' ' -f 1)
