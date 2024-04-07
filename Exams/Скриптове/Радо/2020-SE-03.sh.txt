@@ -10,7 +10,7 @@ tar -cf $temp_repo $pkg/tree
 
 mv -f "$temp_repo" "$repo/packages/$sum.tar.xz"
 
-if [ $(grep "$version"  "$repo/db" | wc -l) -eq 0 ]; then
+if $(grep "$version"  "$repo/db") ; then
         echo "$version" >> "$repo/db"
 else
         sed -i "s/$version /d" "$repo/db"
