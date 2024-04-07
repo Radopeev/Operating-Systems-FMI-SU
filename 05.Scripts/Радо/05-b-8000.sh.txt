@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ];then
+        echo "Exactly one argument expected"
+        exit 1
+fi
+
+username=$(grep "${1}" /etc/passwd | cut -d ':' -f1 )
+
+ps -A -o  user,rss,vgz --sort -vsz | grep "^${username}" | awk '{print $2,$3}'

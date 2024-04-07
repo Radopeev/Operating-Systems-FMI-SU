@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+        echo "Expected one argument"
+        exit 1
+fi
+
+if [[ ! "${1}" =~ ^[0-9]+$ ]]; then
+        echo "Expected number"
+        exit 1
+fi
+
+if [[ "$(whoami)" = "root" ]]; then
+        while read -r user; do
+                if [ -n  $(ps -e -o uid,pid.rss | pgrep -q "${user}") ]; then
+                        if [ "$(ps -e -o uid,pid,rss | pgrep -q "${user}" | awk -v 'count=0'    '{count+=$3} END{print $count}')" -gt "${1}" ]; then
+                                echo "Kill $(ps -e -o uid,pid,rss | pgrep -q "${user}" | sort -k 3 -n | awk '{print $2}' | tail -n 1) "
+                        fi
+                fi
+        done < /etc/passwd
+fi

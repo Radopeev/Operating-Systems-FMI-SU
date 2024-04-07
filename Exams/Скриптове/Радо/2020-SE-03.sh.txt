@@ -1,0 +1,19 @@
+#!/bin/bash
+
+pkg=$2
+repo=$1
+
+temp_repo=$(mktemp)
+version=$(basename $pkg-$(cat $pkg/version))
+tar -cJf $temp_repo $pkg/tree
+sum=$(sha256sum $temp_repo | cut -d ' ' -f 1)
+
+mv -f "$temp_repo" "$repo/packages/$sum.tar.xz"
+
+if $(grep "$version"  "$repo/db") ; then
+        echo "$version" >> "$repo/db"
+else
+        sed -i "s/$version /d" "$repo/db"
+fi
+
+sort $repo/db

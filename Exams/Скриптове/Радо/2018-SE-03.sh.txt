@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ ${#} -ne 2 ]; then
+        echo "Two arguments expected"
+        exit 1
+fi
+
+
+fields=$(cat "${1}" | awk -F ',' '{print NF}' | head -n 1)
+
+lines=$(mktemp)
+cut -d ',' -f 2- "${1}" | tr ',' ' ' | sort | uniq | tr ' ' ','  > $lines
+
+while read line; do
+        #echo "${line}"
+        cat  "${1}" | grep -E ",${line}"  | sort -n -t ',' -k 1 | head -n 1  >> "${2}"
+done < $lines
+
+rm $lines

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [ ${#} -ne 2 ]; then
+        echo "Two arguments expected"
+        exit 1
+fi
+
+if ! [ -f "${1}" ] || ! [ -f "${2}" ]; then
+        echo "Only files expected"
+        exit 1
+fi
+
+lines1=$(cat "${1}" | wc -l)
+lines2=$(cat "${2}" | wc -l)
+winner=""
+
+if [ "${lines1}" -lt "${lines2}" ]; then
+        winner=$(echo "${lines2}")
+else
+        winner=$(echo "${lines1}")
+fi
+
+cat "${winner}" | tr '-' ' ' | cut -d ' ' -f 3 | sort > "${winner}".songs

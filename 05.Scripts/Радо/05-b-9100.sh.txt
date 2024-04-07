@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+        echo "Two arugments expected"
+        exit 1
+fi
+
+if [ ! -d "${1}" ] || [ ! -d "${2}" ]; then
+        echo "Directories expected"
+        exit
+fi
+
+suffixes=$(find "${1}" -type f | awk -F '.' '{print $NF}' | sort | uniq )
+#echo "${suffixes}"
+
+while read -r suffix; do
+        if [ ! -d "${2}/${suffix}" ]; then
+                echo 'Making'
+                mkdir "${2}/${suffix}" 2>/dev/null
+        fi
+        while read -r file; do
+                extension=$( echo "${file}" | awk -F '.' '{print $NF}')
+                if [ "${extension}" == "${suffix}" ]; then
+                        cp "${file}" "${2}/${suffix}" 2>/dev/null
+                fi
+        done < <(find "${1}" -type f)
+done < <( echo "${suffixes}")

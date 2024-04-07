@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [ ${#} -ne 2 ]; then
+        echo "Two arguments expected"
+        exit 1
+fi
+
+if [ ! -d "${2}" ]; then
+        echo "Arg 2 should be directory"
+        exit 1
+fi
+
+touch "${1}"
+echo "hostname,phy,vlans,hosts,failover,VPN-3DES-AES,peers,VLAN Trunk Ports,license,SN,key"
+
+while read file; do
+        phy=$(grep -Е "Maximum Physical Interfaces" "${file}" | cut -d ':' -f 2)
+        vlans=$(grep -Е "VLANs" "${file}"| cut -d ':' -f 2)
+        hosts=$(grep -Е "Inside Hosts" "${file}" | cut -d ':' -f 2)
+        failover=$(grep -Е "Failover" "${file}" | cut -d ':' -f 2)
+        VPN_3DES_AES=$(grep -Е "VPN-3DES-AES" "${file}" | cut -d ':' -f 2)
+        peers=$(grep -F "\*Total VPN Peers" "${file}" | cut -d ':' -f 2)
+        VLAN_Trunk_Ports=$(grep -Е "VLAN Trunk Ports" "${file}" | cut -d ':' -f 2)
+        license=$(sed -E 's/This platform has [a,an] //' "${file}")
+        sn=$(grep -Е "Serial Number" "${file}" | cut -d ':' -f 2)
+        key=$(grep -Е "Running Activation Key" "${file}" | cut -d ':' -f 2)
+        bn=$(basename "${file}" .log)
+        echo "${bn},${phy},${vlans},${hosts},${failover},${VPN_3DES_AES},${peers},${VLAN_Trunk_Ports},${license},${sn},${key}" >> "${1}"
+
+done < <(find "${2}" -mindepth 1 -type f -name "*.log")

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ]; then
+        echo "Exactly one argument needed"
+        exit 1
+fi
+
+if [ ! -d ${1} ]; then
+        echo "Argument should be directory"
+        exit 1
+fi
+
+for el in $(find ${1} -mindepth 1 -maxdepth 1); do
+        if [ -f "${el}" ]; then
+                echo "${el} $(cat ${el} | wc -c)"
+        elif [ -d "${el}" ]; then
+                echo "${el} $(find ${el} -mindepth 1 -maxdepth 1 | wc -l)"
+        fi
+done
