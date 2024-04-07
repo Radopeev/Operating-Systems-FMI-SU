@@ -5,8 +5,8 @@ repo=$1
 
 temp_repo=$(mktemp)
 version=$(basename $pkg-$(cat $pkg/version))
+tar -cJf $temp_repo $pkg/tree
 sum=$(sha256sum $temp_repo | cut -d ' ' -f 1)
-tar -cf $temp_repo $pkg/tree
 
 mv -f "$temp_repo" "$repo/packages/$sum.tar.xz"
 
