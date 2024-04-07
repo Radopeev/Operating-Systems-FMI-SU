@@ -5,7 +5,17 @@ if [ $(whoami) != "oracle" ] || [ $(whoami) != "oracle"]; then
         exit 1
 fi
 
-command=$ORACLE_HOME/bin/adrci
+if [ -z "$ORACLE_HOME" ]; then
+        echo "No environment variable"
+        exit 1
+fi
+
+if [ -x "$ORACLE_HOME/bin/adrci" ]; then
+        echo "Command is not executable"
+        exit 1
+fi
+
+#command=$ORACLE_HOME/bin/adrci
 
 temp=$(mktemp)
 $ORACLE_HOME/bin/adrci -exec="show homes" >> $temp
@@ -15,8 +25,8 @@ if [  $(cat "${temp}" | wc -l) -ne 1 ]; then
         while read home; do
                 while read file; do
                         sum=$(( sum + $(stat -c "%s" "${file}") ))
-                done < <(find "${file}" -mindepth 1 -type f)
-                sum=$(( sum/1000000 ))
+                done < <(find "${home}" -mindepth 1 )
+                sum=$( echo "${sum}/1000000.0" | bc )
                 echo "${sum} ${home}"
-        done < $temp
+        done < <(cat $temp | tail -n +2)
 fi
