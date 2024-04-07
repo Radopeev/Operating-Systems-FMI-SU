@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [ ${#} -ne 2 ]; then
+        echo "Two arguments expected"
+        exit 1
+fi
+
+if [ ! -d "${1}" ]; then
+        echo "SRC should be directory"
+        exit 2
+fi
+
+mkdir "${2}"
+mkdir "${2}/images"
+while read file; do
+        bs=$(basename "${file}" .jpg)
+        #echo "${bs}" | grep --color -E "\([a-zA-Z ]*\)"
+        title=$(echo "${bs}" | sed -E "s/\([a-zA-Z ]*\)//g" | sed -E "s/[[:space:]]+/ /g")
+        album=$(echo "${bs}" | sed -E "s/.*(\([a-zA-Z ]*\)).*/\1/g")
+        if [ $(echo "${album}" | grep -E "\(" | wc -l) -eq 0 ]; then
+                album="misc"
+        fi
+        date=$(stat -c "%y\n" "${file}" | cut -d ' ' -f 1)
+        sum=$(sha256sum "${file}" | cut -d ' ' -f 1 | cut -c 1-16)
+        echo "${file}"
+        cp  "${file}" "${2}/images/${sum}.jpg"
+        mkdir -p "${2}/by-date/${date}/by-album/${album}/by-title"
+        mkdir -p "${2}/by-date/${date}/by-title"
+        mkdir -p "${2}/by-album/${album}/by-date/${date}/by-title"
+        mkdir -p "${2}/by-album/${album}/by-title"
+        mkdir -p "${2}/by-title"
+        ln -s "${2}/images/${sum}.jpg" "${2}/by-date/${date}/by-album/${album}/by-title/${title}.jpg"
+        ln -s "${2}/images/${sum}.jpg" "${2}/by-date/${date}/by-title/${title}.jpg"
+        ln -s "${2}/images/${sum}.jpg" "${2}/by-album/${album}/by-date/${date}/by-title/${title}.jpg"
+        ln -s "${2}/images/${sum}.jpg" "${2}/by-album/${album}/by-title/${title}.jpg"
+        ln -s "${2}/images/${sum}.jpg" "${2}/by-title/${title}.jpg"
+done < <(find "${1}" -mindepth 1 -name '*.jpg')

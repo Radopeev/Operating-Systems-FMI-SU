@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ]; then
+        echo "One argument expected"
+        exit 1
+fi
+
+if [ ! -f "${1}" ]; then
+        echo "Regular file expected"
+        exit 1
+fi
+
+log_file="$1"
+most_requested=$(mktemp)
+cat "${1}" | cut -d ' ' -f 2 | sort | uniq -c | sort -n -r -k 1 | head -n 3 > $most_requested
+
+while read -r line; do
+        domain=$(echo "${line}" | cut -d ' ' -f 2)
+        http2_0=$(cat "${1}" | grep -F "${domain}" | grep -F  "HTTP/2.0" | wc -l)
+        not_http2_0=$(cat "${1}" | grep -F "${domain}" | grep -vF  "HTTP/2.0" | wc -l)
+        echo "${domain} HTTP/2.0: ${http2_0} non-HTTP/2.0: ${not_http2_0}"
+        lines=$(mktemp)
+        cat "${log_file}" | grep -F "${domain}" > $lines
+        users=$(mktemp)
+        while read request; do
+                user=$(echo "${request}" | cut -d ' ' -f 1)
+                code=$(echo "${request}" | cut -d ' ' -f 9)
+                if [ "${code}" -gt "302" ]; then
+                        echo "${user}" >> $users
+                fi
+        done < $lines
+        cat "${users}" | sort | uniq -c | sort -n
+        rm $users
+        rm $lines
+done < $most_requested
+
+rm $most_requested
