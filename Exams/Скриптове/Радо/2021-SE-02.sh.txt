@@ -1,0 +1,32 @@
+#!/bin/bash
+
+for file in $@; do
+        if [ ! -f "${file}" ]; then
+                echo "Only regular files expected"
+                exit 1
+        fi
+done
+
+for file in $@; do
+        fqdn=$(cat "${file}" | cut -d -f 1)
+        grep "${fqdn}" -E "^(?!.*\.\.)[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.$"
+        if [ ${#} -ne 0 ]; then
+                echo "FQDN not in correct format"
+                exit 1
+        fi
+done
+
+currentDate=$(date + '%Y%m%d')
+for file in $@; do
+        cat "${file}" | grep -F "SOA" | grep "\("
+        if [ ${?} -eq 0 ]; then
+                date=$(cat "${file}" | head -n 2 | tail -n 1 | cut -d ';' -f 1 | sed -E "s/( *)//g" | cut -c 8)
+                if [ "${currentDate}" > "${date}" ]; then
+                        sed -i "s/${date}../${currentdate}00/" "${file}"
+                else
+                        sn=$(cat "${file}" | grep -F "${date}" | cut -d ';' -f 1 | sed -E "s/( *)//g" | rev | cut -c 2 | rev)
+                        sn=$(( sn+1 ))
+                        sed -f "s/${date}../${date}${sn}/" "${file}"
+                fi
+        fi
+done
