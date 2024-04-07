@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [ $(whoami) != "oracle" ] || [ $(whoami) !=grid ]; then
+        echo "You cannot run this script"
+        exit 1
+fi
+
+if [ -z "${ORACLE_HOME}" ]; then
+        echo "Environment varible is not present"
+        exit 1
+fi
+
+diag=$(/u10/app/$(whami)
+command=$(ORACLE_HOME/bin/adrci)
+
+if [ -x "$command" ]; then
+        echo "Command cannot be executed"
+        exit 1
+fi
+
+
+starting_commmand=$SET_BASE $diag
+
+adrHomes=$($command exec="$starting_command SHOW HOMES")
+
+if grep -q "NO ADR homes are set" "${adrHomes}"; then
+        echo "No homes found"
+        exit 1
+fi
+
+useful_homes=$(echo "${adrHomes}" | grep -E "crs|tnslsnr|kfod|asm|adrci)"
+
+while read home; do
+        $command exec="$starting_command SET HOMEPATH $home; PURGE -AGE $($1*60 | bc)"
+done < <(echo "${useful_homes}")

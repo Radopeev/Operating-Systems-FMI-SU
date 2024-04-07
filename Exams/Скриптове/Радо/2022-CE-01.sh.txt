@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ ${#} -ne 3 ]; then
+        echo "Three arguments expected"
+        exit 1
+fi
+
+if [[ ! "${1}" =~ ^-?[0-9]+$ || ! "${1}" =~ ^-?[0-9]+\.[0-9]+$ ]]; then
+        echo "Arg one should be number"
+        exit 1
+fi
+
+if [ -z "${2}" ]; then
+        echo "Arg two cannot be empty"
+        exit 1
+fi
+
+if [ -z "${3}" ]; then
+        echo "Arg three cannot be empty"
+        exit 1
+fi
+
+decimal=$(grep -E ",${2}," "prefix.csv" | cut -d ',' -f 3)
+name=$(grep -E ",${3}," "base.cvs" | cut -d ',' -f 1)
+measure=$( grep -E ",${3}," "base.csv" | cut -d ',' -f 3)
+
+echo "$( ${1}*$value | bc) ${3} ($measure, $name)
