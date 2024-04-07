@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ]; then
+        echo "Exactly one argument expected"
+        exit 1
+fi
+
+if [ -z "${1}" ]; then
+        echo "Argument cannot be empty"
+        exit 1
+fi
+
+if grep -vq -E "^${1}" /proc/acpi/wakeup ; then
+        echo "Devies is not in the kernel"
+        exit 2
+fi
+
+status=$(grep -E "^${1}" | cut -d ' ' -f 3)
+if [ "${status} != "*disabled" ]; then
+        echo "${1}" /proc/acpi/wakeup
+fi
