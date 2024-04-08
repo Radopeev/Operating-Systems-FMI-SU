@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if [ ${#} -ne 2 ]; then
+        echo "Two arguments expected"
+        exit
+fi
+
+if [ ! -d "${1}" ]; then
+        echo "Dir one not found"
+        exit
+fi
+
+if [ ! -d "${2}" ]; then
+        echo "Dir two not found"
+        exit
+fi
+
+if [ $(find "${2}" -mindepth 1 | wc -l) -ne 0 ]; then
+        echo "Dir two has to be empty"
+        exit 1
+fi
+
+while read file; do
+        echo "${file}" | grep -E "\.swp$";
+        if [ ${?} -eq 0  ] ; then
+                existing_file=$(echo "${file}" | sed -E "s/.*\/(.*)\.swp$/\1/")
+                if echo "${file}" | grep -E "${existing_file}" ; then
+                        continue;
+                fi
+        fi
+        remove_dir1=$(echo "${file}" | sed -E "s/^${1}\///")
+        dirname=$(dirname "${remove_dir1}")
+        echo "${remove_dir1} ${dirname}"
+        mkdir -p "${2}/${dirname}"
+        cp -r "${file}" "${2}/${dirname}"
+done < <(find "${1}" -mindepth 1 -type f)

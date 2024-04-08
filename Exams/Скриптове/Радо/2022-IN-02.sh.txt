@@ -1,0 +1,107 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ]; then
+        echo "One argument expected"
+        exit 1
+fi
+
+if [[ ! "${1}" =~ -?[0-9]+ ]]; then
+        echo "Argument should be a number"
+        exit 1
+fi
+
+if [ -z $ORACLE_BASE ]; then
+        echo "ORACLE_BASE not found"
+        exit 1
+fi
+
+if [ -z $ORACLE_HOME ]; then
+        echo "ORACLE_HOME not found"
+        exit 2
+fi
+
+command=$(ORACLE_HOME/bin/sqplus)
+
+if [ ! -x $command ]; then
+        echo "No file found"
+        exit 3
+fi
+
+if [ -z $ORACLE_SID ]; then
+        echo "ORACLE_SID not found"
+        exit 2
+fi
+
+
+role=""
+
+if [ $(whoami) = "oracle" ]; then
+        role=SYSDBA
+elif [ $(whoami) = "grid" ]; then
+        role=SYSASM
+elif
+        echo "You cannot run this script"
+        exit 1
+fi
+
+diag_dest=$($command -SL "/ as $role " @a.sql | head -n 4 | tail -n 1)
+
+if [ -z "${diag_dest}" ]; then
+        diag_dest=$ORACLE_BASE
+fi
+
+crs_sum=0
+tnslnr_sum=0
+rdbms_sum=0
+date=$(date + "%s"0
+days_to_seconds=$( $number*86400 | bc)
+
+if [ $(whoami) = "grid" ]; then
+        while read file; do
+                last_mod_time=$(stat -c "%Y" $file)
+                diff=$( $date-$last_mod_fime | bc)
+                if [ $diff -gt $days_to_seconds ]; then
+                        size=$($(stat -c "%s" $file)/1000 | bc)
+                        crs_sum=$(( crs_sum+size ))
+                fi
+        done < <(find "${diag_dest}/crs/$(hostname -s)/trace" | grep -E ".*_[0-9]+.(trc|trm)")
+
+        while read file; do
+                last_mod_time=$(stat -c "%Y" $file)
+                diff=$( $date-$last_mod_time | bc)
+                if [ $diff -gt $days_to_seconds ]; then
+                        size=$( $(stat -c "%s" $file)/1000 | bc)
+                        tnslnr_sum=$(( tnslnr_sum+size ))
+                fi
+        done < <(find "${diag_dest}/tnslnr/$(hostname -s)/*/alert" | grep -E ".*[0-9]+.xml")
+
+        while read file; do
+                last_mod_time=$(stat -c "%Y" $file)
+                diff=$( $date-$last_mod_time | bc)
+                if [ $diff -gt $days_to_seconds ]; then
+                        size=$( $(stat -c "%s" $file)/1000 | bc)
+                        tnslnr_sum=$(( tnslnr_sum+size ))
+                fi
+        done < <(find "${diag_dest}/tnslnr/$(hostname -s)/*/trace" | grep -E ".*[0-9]+.log")
+else
+        while read file; do
+                last_mod_time=$(stat -c "%Y" $file)
+                diff=$( $date-$last_mod_time | bc)
+                if [ $diff -gt $days_to_seconds ]; then
+                        size=$( $(stat -c "%s" $file)/1000 | bc)
+                        rdbmd_sum=$(( rdbms_sum+size ))
+                fi
+        done < <(find "${diag_dest}/rdbms" -maxdepth 2 | grep -E ".*[0-9]+.trm")
+fi
+
+if [ $crs_sum -ne 0 ]; then
+        echo "crs : $crs_sum"
+fi
+
+if [ $tnslnr_sum -ne 0 ]; then
+        echo "tnslnr : $tnslnr_sum"
+fi
+
+if [ $rdbms_sum -ne 0 ]; then
+        echo "rdbms : $rdbms_sum"
+fi

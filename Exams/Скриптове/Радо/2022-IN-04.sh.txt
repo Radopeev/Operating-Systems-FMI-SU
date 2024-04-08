@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ]; then
+        echo "Exactly one argument expected";
+        exit 1
+fi
+
+if [ ! -d "${1}" ]; then
+        echo "Dir not found"
+        exit 1
+fi
+
+if [ ! -f ${1}/foo.pwd ]; then
+        touch ${1}/foo.pwd
+fi
+
+while read file; do
+        bn=$(basename "${file}" .cfg)
+        ${1}/validate.sh "${file}" &>/dev/null
+        if [ ${?} -eq 1 ]; then
+                echo "${bn} :\n"
+                ${1}/validate.sh "${file}" >&2
+        elif [ ${?} -eq 0 ]; then
+                cat "${file}" >> "${1}/foo.pwd"
+                if ! cat "${1}/foo.pwd" | grep -E "^${bn} :.*$"; then
+                        pwd=$(pwgen 10 1)
+                        hashedpwd=$(mkpaswd $pwd)
+                        echo "${bn}:${pwd}"
+                        echo "${bn}:${hashedpwd}" > "${1}/foo.pwd"
+                fi
+        fi
+done < <(find "${1}/cfg" -mindepth 1 -type f)

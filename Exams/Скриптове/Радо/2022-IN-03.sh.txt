@@ -1,0 +1,48 @@
+#!/bin/bash
+
+jar_flag=""
+filename=""
+arguments=""
+options=""
+
+is_option () {
+        echo "${1}" | grep -qF '-'
+}
+
+is_option_jar () {
+        echo "${1}" | grep -q -F "-jar"
+}
+
+is_jar_file () {
+        echo "${1}" | grep -e -F ".jar"
+}
+
+
+
+for el in $@; do
+        is_option_jar $el
+        if [ ${?} -eq 0 ]; then
+                jar_flag=${el}
+                continue
+        fi
+        is_option $el
+        if [ ${?} -eq 0 ]; then
+                echo "${el}" | grep -q -F "-D"
+                if [ ${?} -ne 0]; then
+                        options+=${el}
+                else
+                        if [ -z jar_flag ]; then
+                                continue
+                        else
+                                options+=${el}
+                        fi
+                fi
+                continue
+        fi
+        is_jar_file $el
+        if [ ${?} -eq 0 ] && [ -z $jar_flag ]; then
+                filename=$el
+                continue
+        fi
+        arguments+="${el}"
+done
