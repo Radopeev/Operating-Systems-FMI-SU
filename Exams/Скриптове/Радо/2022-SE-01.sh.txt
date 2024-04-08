@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ]; then
+        echo "One argument expected"
+        exit 1
+fi
+
+if [ ! -f "${1}" ]; then
+        echo "${1} not found "
+        exit 1
+fi
+
+while read line; do
+        if echo "${line}" | grep -E "^#.*$"; then
+                continue
+        else
+                device=$(echo "${line}" | cut -d ' ' -f 1 | sed -E "s/ */ /g")
+                mode=$(echo "${line}" | cut -d ' ' -f 2 | sed -E "s/ */ /g")
+                if [ ${mode} != "enabled" ] || [ ${mode} != "disabled" ]; then
+                        echo "${mode} is invalid mode" >&2
+                        contine
+                else
+                        cat /proc/acpi/wakeup | tail -n +2 | cut -d ' ' -f 1 | grep -F -q "^${device}"
+                        if [ ${?} -ne 0 ]; then
+                                continue
+                                echo "${1} not found " >&2
+                        fi
+                fi
+                echo "${device}" > /proc/acpi/wakeup
+        fi
+done < "${1}"
