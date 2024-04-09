@@ -1,0 +1,33 @@
+#!/bin/bash
+
+if [ ${#} -lt 2 ]; then
+        echo "At least 2 arguments expected"
+        exit 1
+fi
+
+if [[ ! "${1}" =~ ^[0-9]+$ ]]; then
+        echo "Arg one should be a number"
+        exit 1
+fi
+
+number=$1
+shift 1
+total_secs=0
+scale=2
+count=0
+
+while true; do
+        secs=$( { time $@ >/dev/null 2>&1; } 2>&1 | grep real | awk '{print $2}' | tr 'm' ' ' | rev  | cut -c 2- | rev | awk '{ print $1*60+$2}' | head -n 1)
+        #echo "${secs}"
+        total_secs=$( echo "scale=2;$total_secs+$secs" | bc)
+        #echo "${count}"
+        count=$(( count+1 ))
+        res=$( echo  "$total_secs $number" | awk '{ if ($1>$2) { print 1} else {print 0} }' )
+        #echo $res
+        if [ $res -eq 1 ]; then
+                break
+        fi
+done
+
+echo "Ran the command '$@' $count times for $(echo $total_secs | awk '{printf "%.2f\n",$1}') seconds."
+avg_time=$( echo "scale=2;$total_secs/$count
