@@ -1,0 +1,57 @@
+#!/bin/bash
+
+if [ "${#}" -ne 2 ]; then
+        echo "Two arguments expected"
+        exit 1
+fi
+
+if [ ! -d "${1}" ]; then
+        echo "Dir not found"
+        exit 2
+fi
+
+if [[ ! "${2}" =~ ^[0-9]+$ ]]; then
+        echo "Positive integer expected"
+        exit 2
+fi
+
+objects=$(mktemp)
+invalid_object=$(mktemp)
+
+while read object; do
+        bn=$(basename "${object}" .tar.xz | cut -d '-' -f 1,2)
+        if ! cat "${object}" | grep -E "^${bn}$"; then
+                echo "${bn}" >> objects
+        fi
+done < <(find "${1}/0" )
+
+dir=$1
+
+year_backups=$(mktemp)
+month_backups=$(mktemp)
+week_backups=$(mktemp)
+day_backups=$(mktemp)
+
+save_backups () {
+        find "$dir/${1}" |  sort -t '-' -k 1,2,3 > "${2}"
+
+        while read link; do
+                if [ ! -e "${link}" ]; then
+                        rm "${linl}"
+                fi
+        done < <(find "$dir/${1}" -type l)
+
+        while read object; do
+                cat "${2}" | grep -F "${object}" | head -n -${3} | xargs rm {} \;
+        done < ${objects}
+}
+
+save_backups 0 "${year_backups}" 1
+save_backups 1 "${month_backups}" 2
+save_backups 2 "${week_backups}" 3
+save_backups 3 "${day_backups}" 4
+
+rm "${year_backups}"
+rm "${month_backups}"
+rm "${week_backups}"
+rm "${day_backups}"

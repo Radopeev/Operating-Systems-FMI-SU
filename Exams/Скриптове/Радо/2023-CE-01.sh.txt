@@ -1,0 +1,21 @@
+#!/bin/bash
+
+## checks
+
+if [ ${#} -ne 2 ]; then
+        echo "Two arguments expected"
+        exit 1
+fi
+
+if [ ! -f "${1}" ]; then
+        echo "Dir not found"
+        exit 2
+fi
+
+if [ -z "${2}" ]; then
+        echo "Star type cannot be empty"
+        exit 2
+fi
+
+#name=$(cat "${1}"| cut -d ',' -f 1,4,7 | grep -v -E ",?--,?" | grep -F "$(cat "${1}"| cut -d ',' -f 4,5  | grep -E ",${2}$" | cut -d ',' -f 1  | sort  | uniq -c  | sort -nr  | head -n 1 | tr -s ' '  | cut -d ' ' -f 3)" | sort -g -k 3 -t ',' | cut -d ',' -f 1
+echo "${name}"
