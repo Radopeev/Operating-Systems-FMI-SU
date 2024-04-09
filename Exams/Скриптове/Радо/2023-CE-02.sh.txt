@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if [ ${#} -ne 3 ]; then
+        echo "Three arguments expected"
+        exit 1
+fi
+
+if [ ! -f ${1} ]; then
+        echo "Arg one must be file"
+        exit 2
+fi
+
+if [ ! -f ${2} ]; then
+        echo "Arg two must be file"
+        exit 2
+fi
+
+if [ -z "${3}" ]; then
+        echo "Arg three cannot be empty"
+        exit 2
+fi
+
+dist1=$(cat "${1}" | grep -E "^${3}:" | cut -d ':' -f 2 | cut -d ' ' -f 2)
+dist2=$(cat "${2}" | grep -E "^${3}:" | cut -d ':' -f 2 | cut -d ' ' -f 2)
+#echo "${dist1} ${dist2}"
+
+if [ $dist1 -eq $dist2 ]; then
+        echo "Equal"
+        exit 0
+fi
+
+result=$(echo "if ($dist1 > $dist2) 1 else 0" | bc)
+
+if [ $result -eq 0 ]; then
+        echo "${1}"
+else
+        echo "${2}"
+fi
