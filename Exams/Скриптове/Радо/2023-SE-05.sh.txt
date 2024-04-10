@@ -1,0 +1,39 @@
+#!/bin/bash
+
+count=0
+
+processes=$(mktemp)
+counts=$(mktemp)
+
+while true; do
+        flag=0
+        count=$(( count+1 ))
+        ps -e -o comm= | sort | uniq > $processes
+        while read comm; do
+                rss_sum=$(ps -e -o comm=,rss= | awk -v c="$comm" '$1 == c {sum+=$2} END {print sum}')
+                if [ -n "$rss_sum" ] && [ "$rss_sum" -gt 65536 ]; then
+                        curr_count=$(grep -E "^${comm}" "${counts}" | awk '{print $2}')
+                        if [ -n "$curr_count" ]; then
+                                curr_count=$(( curr_count+1 ))
+                                sed -i -E "s/${comm} [0-9]+/${comm} ${curr_count}/" "${counts}"
+                        else
+                                echo "${comm} 1" >> "${counts}"
+                        fi
+                        flag=1
+                fi
+        done < $processes
+        if [ $flag -eq 0 ]; then
+                break
+        fi
+        sleep 1
+done
+
+half=$(echo "$count/2" | bc )
+
+while read comm c; do
+        if [ $c -gt $half ]; then
+                echo "${comm}"
+        fi
+done < $counts
+
+rm $processes $counts

@@ -1,0 +1,34 @@
+#!/bin/bash
+
+if [ ${#} -ne 1 ];then
+        echo "One argument expected"
+        exit 1
+fi
+
+if [ ! -d ${1} ]; then
+        echo "Dir not found"
+        exit 2
+fi
+
+files=$(mktemp)
+total_bytes=0
+groups=$(mktemp)
+
+while read file; do
+        file_hash=$(sha256sum "${file}" | awk '{print $1}')
+        if grep -Fq "${file_hash}" "${files}" ; then
+                existing_file=$(grep -w "${file_hash}" "$files" | awk '{print $2}')
+                rm "${file}"
+                ln -s  $existing_file $file
+                total_bytes=$(( total_bytes+$(stat -c "%s" "${file}") ))
+                echo "${existing_file}" >> $groups
+        else
+                echo "${file_hash} ${file}" >> $files
+        fi
+done < <(find "${1}" -type f)
+
+
+echo "Total groups : $(cat "${groups}" | sort | uniq | wc -l)"
+echo "Total saved bytes : $total_bytes"
+
+rm $files
