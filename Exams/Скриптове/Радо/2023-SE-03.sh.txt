@@ -15,7 +15,11 @@ total_files=$(find "${1}" -type f | wc -l)
 half_files=$(echo "$total_files/2" | bc )
 
  while read -r file; do
-        tr -d '[:punct:]' < "${file}" | tr ' ' '\n' | while read -r word; do
+         tr -d '[:punct:]' < "${file}" | tr ' ' '\n'| sort | uniq | while read -r word; do
+                count=0
+                if [ -z "${word}" ]; then
+                        continue
+                fi
                 if grep -w -q "${word}" "${stopwords}"; then
                         count=$(grep -w "${word}" "${stopwords}" | cut -d ' ' -f 2)
                         count=$(( count+1 ))
@@ -26,13 +30,13 @@ half_files=$(echo "$total_files/2" | bc )
         done
 done < <(find "${1}" -type f -name "*.txt")
 
-sed -i "2/d" "${stopwords}"
-sed -i "1/d" "${stopwords}"
+sed -i -E "/2/d" "${stopwords}"
+sed -i -E  "/1/d" "${stopwords}"
+
 
 i=0
-while read stopword count ; do
-        echo "${count}"
-        if [ "$count" -gt "$half_files" ]; then
+while read stopword c ; do
+        if [ $c -gt "$half_files" ]; then
                 echo "${stopword}"
                 i=$(( i+1 ))
         fi
