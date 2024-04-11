@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ "$(id -u)" != "0" ]; then
+        echo "you cannot run this script"
+        exit 1
+fi
+
+while IFS=: -r username x uid gid full_name home shell; do
+        if [ "${uid}" -ge 1000 ] && [ ! -d "${home}" ] || [ ! -w "${home}" ]; then
+                echo "${username}: ${home}"
+        fi
+done < /etc/passwd
