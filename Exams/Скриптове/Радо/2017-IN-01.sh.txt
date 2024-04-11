@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [ "${#}" -ne 3 ]; then
+        echo "3 arguments expected"
+        exit 1
+fi
+
+if [ ! -f "${1}" ]; then
+        echo "File not found"
+        exit 2
+fi
+
+value1=$( grep -E "^${2}=" "${1}" | cut -d '=' -f 2 | tr ' ' '\n')
+value2=$( grep -E "^${3}=" "${1}" | cut -d '=' -f 2)
+
+if [ -z "${value2}" ]; then
+        echo "Key two not found"
+        exit 3
+fi
+
+echo "${value1}"
+
+while read term; do
+        if grep -E "^${3}=" "${1}"| cut -d '=' -f 2 | grep -w -q  "${term}"; then
+                sed -i -E "s/${3}=(.*)${term}(.*)/${3}=\1 \2/" "${1}"
+        fi
+done < <(echo "${value1}")
+
+sed -i -E "s/^${3}= +/${3}=/g" "${1}"

@@ -1,0 +1,39 @@
+#!/bin/bash
+
+if [ ${#} -lt 1 ] || [ ${#} -gt 2 ]; then
+        echo "Invalid number of arguments"
+        exit 1
+fi
+
+if [ ! -d ${1} ]; then
+        echo "Dir not found"
+        exit
+fi
+
+if [ ${#} -eq 2 ]; then
+        if [ ! -f ${2} ];then
+                echo "File not found"
+        fi
+fi
+
+dir=${1}
+
+print () {
+        while read link;do
+                if [ ! -e "${link}" ];then
+                        count=$(( count+1 ))
+                else
+                        echo "$(basename ${link}) -> $(readlink $link)" >> "${1}"
+                fi
+        done < <(find "${dir}" -type l)
+}
+
+count=0
+
+if [ ${#} -eq 2 ];then
+        print "${2}"
+else
+        print "/dev/stdout"
+fi
+
+echo "Broken links: ${count}"

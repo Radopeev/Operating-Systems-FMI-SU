@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ ${#} -ne 2 ]; then
+        echo "Two arguments expected"
+        exit 1
+fi
+
+if [ ! -d "${1}" ]; then
+        echo "Dir not found"
+        exit 2
+fi
+
+if [ -z "${2}" ]; then
+        echo "Invalid string"
+        exit 3
+fi
+
+version=$(mktemp)
+
+while read file; do
+        bn=$(basename "${file}")
+        if [[ ! "${bn}" =~ ^vmlinuz-[0-9]+\.[0-9]+\.[0-9]+-.*$ ]]; then
+                continue
+        else
+                if echo "${bn}" | grep -q "${2}"; then
+                        echo "${bn}" >> ${version}
+                fi
+        fi
+done < <(find "${1}" -mindepth 1 -maxdepth 1)
+
+cat "${version}" | sort -t '-' -k 2 -V -r | head -n 1

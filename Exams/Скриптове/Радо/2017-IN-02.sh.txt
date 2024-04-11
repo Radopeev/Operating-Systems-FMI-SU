@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if [ "$(whoami)" != "root" ]; then
+        echo "You cannot run this script"
+        exit 1
+fi
+
+if [ ${#} -ne 1 ];then
+        echo "One argument expected"
+        exit 2
+fi
+
+if [ -z "${1}" ]; then
+        echo "Invalid user"
+        exit 2
+fi
+
+
+users=$(mktemp)
+
+user_processes=$(ps -e -o user= | sort | uniq -c | sort -nr | grep "${1}" | awk '{print $1}')
+
+ps -e -o user= | sort | uniq -c | sort -nr | awk -v user="${1}" -v ps="${user_processes}" '{ if ( $2!=user && ps<$1) { print $2}}'
+
+
+number=$(ps -e -o times= | wc -l)
+sum=$(ps -e -o times= | xargs | tr ' ' '+' | bc)
+avg_time=$( $number/$sum | bc)
+
+echo "${sum}"
+
+while read user pid times; do
+        if      [  $times -gt $avg_time ]; then
+                kill -9 $pid
+        fi
+done < <(ps -e -o user=,pid=,times= | grep "${1}")
