@@ -14,6 +14,8 @@ files=$(mktemp)
 total_bytes=0
 groups=$(mktemp)
 
+#need to fix it , now id deletes hardlinks as well
+
 while read file; do
         file_hash=$(sha256sum "${file}" | awk '{print $1}')
         if grep -Fq "${file_hash}" "${files}" ; then
