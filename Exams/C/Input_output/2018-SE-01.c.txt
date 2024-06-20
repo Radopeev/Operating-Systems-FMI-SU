@@ -1,0 +1,83 @@
+#include <string.h>
+#include <fcntl.h>
+#include <err.h>
+#include <unistd.h>
+
+void delete_chars(const char* set1, const char* input);
+void squeeze_chars(const char* set1,const char* input);
+void replace_chars(const char* set1,const char* set2,const char* input);
+
+void delete_chars(const char* set1, const char* input) {
+        while(*input) {
+                if(!strchr(set1,*input)) {
+                        write(1,input,1);
+                }
+                input++;
+        }
+}
+
+void squeeze_chars(const char* set1,const char* input) {
+        char prev = '\0';
+        while(*input) {
+                if(strchr(set1,*input)) {
+                        if(*input != prev) {
+                                write(1,input,1);
+                                prev =  *input;
+                        }
+                } else {
+                        write(1,input,1);
+                        prev = *input;
+                }
+                input++;
+        }
+}
+
+void replace_chars(const char* set1, const char* set2, const char* input) {
+        while(*input) {
+                const char* pos =strchr(set1,*input);
+                if(pos) {
+                        int index = pos - set1;
+                        write(1,&set2[index],1);
+                } else {
+                        write(1,input,1);
+                }
+        }
+}
+
+int main(int argc,char* argv[]) {
+
+        char option=' ';
+        char* set1,* set2 = NULL;
+
+        if(strcmp(argv[1],"-d") == 0) {
+                option='d';
+                set1 = argv[2];
+        } else if(strcmp(argv[1],"-s") == 0) {
+                option='s';
+                set1 = argv[2];
+        } else {
+                set1 = argv[2];
+                set2 = argv[3];
+
+                if(strlen(set1) != strlen(set2)) {
+                        errx(1,"asdas");
+                }
+        }
+
+        char buffer[4096];
+        ssize_t read_size;
+
+        if(read(0,buffer,sizeof(buffer)) > 0) {
+                if(option == 'd') {
+                        delete_chars(set1,buffer);
+                } else if(option == 's') {
+                        squeeze_chars(set1,buffer);
+                } else {
+                        replace_chars(set1,set2,buffer);
+                }
+        }
+
+        if(read_size < 0) {
+                err(1,"sdasd");
+        }
+}
