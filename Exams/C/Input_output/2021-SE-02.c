@@ -10,6 +10,7 @@ static uint8_t decode(uint16_t num) {
                 if(num & frontMask) {
                         result = (result << 1) | 0x01;
                 }
+                result = (result << 1)
         }
         return result;
 }
