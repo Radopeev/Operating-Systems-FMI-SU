@@ -1,0 +1,73 @@
+
+void close_all(int patch,int f1,int f2);
+void close_all(int patch,int f1,int f2) {
+        close(patch);
+        close(f1);
+        close(f2);
+}
+
+typedef struct tuple {
+        uint16_t offset;
+        uint8_t original;
+        uint8_t new;
+} tuple;
+
+int main(int argc,char* argv[]) {
+        if(argc != 4) {
+                errx(1,"adssad");
+        }
+
+        int patch = open(argv[1],O_RDONLY);
+        if(patch < 0) {
+                err(1,"asdsad");
+        }
+
+        int f1 = open(argv[2],O_RDONLY);
+        if(f1 < 0) {
+                close(patch);
+                err(1,"asdsad");
+        }
+        int f2 = open(argv[3],O_CREAT | O_TRUNC | O_WRONLY,0644);
+        if(f2 < 0) {
+                close(patch);
+                close(f1);
+                err(1,"sad");
+        }
+
+        uint8_t byte;
+        ssize_t read_size;
+        while((read_size=read(f1,&byte,sizeof(byte))) > 0) {
+                if(write(f2,&byte,sizeof(byte)) < 0) {
+                        close_all(patch,f1,f2);
+                        err(1,"adsad");
+                }
+        }
+
+        struct stat st;
+        if(fstat(f2,&st) < 0) {
+                close_all(patch,f1,f2);
+                err(1,"asdds");
+        }
+
+        tuple t;
+        while((read_size=read(patch,&t,sizeof(t))) > 0) {
+                if(t.offset > st.st_size) {
+                        close_all(patch,f1,f2);
+                        errx(1,"asdsd");
+                }
+
+                if(t.original != t.new) {
+                        if(lseek(f2,t.offset,SEEK_SET) > 0) {
+                                close_all(patch,f1,f2);
+                                if(write(f2,t.new,sizeof(t.new)) < 0) {
+                                        err(1,"asds");
+                                }
+                        }
+                }
+        }
+        if(read_size < 0) {
+                close_all(patch,f1,f2);
+                err(1,"asdd");
+        }
+        close_all(patch,f1,f2);
+}
