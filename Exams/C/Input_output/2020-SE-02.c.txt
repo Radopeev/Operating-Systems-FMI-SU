@@ -1,0 +1,62 @@
+#include <unistd.h>
+#include <fcntl.h>
+#include <err.h>
+#include <stdint.h>
+
+
+static void close_all(int scl, int sdl,int new_file) {
+        close(scl);
+        close(sdl);
+        close(new_file);
+}
+
+int main(int argc, char* argv[]) {
+        if(argc != 4) {
+                errx(1,"args error");
+        }
+
+        int scl = open(argv[1],O_RDONLY);
+        if(scl < 0) {
+                err(1,"scl error");
+        }
+        int sdl = open(argv[2],O_RDONLY);
+        if(sdl < 0) {
+                close(scl);
+                err(1,"sdl error");
+        }
+
+        int new_file = open(argv[3],O_WRONLY | O_TRUNC | O_CREAT,0644);
+        if(new_file < 0) {
+                close(scl);
+                close(sdl);
+                err(1,"new file error");
+        }
+
+        uint16_t element;
+        uint8_t byte;
+        int bit_position = 0;
+        int read_size;
+        while((read_size = read(sdl,&element,sizeof(element))) > 0) {
+                if(bit_position % 8 == 0) {
+                        if(read(scl,&byte,sizeof(byte)) < 0) {
+                                close_all(scl,sdl,new_file);
+                                err(1,"read error");
+                        }
+                }
+                int bit_index = bit_position % 8;
+
+                if(byte & (1 << bit_index)) {
+                        if(write(new_file,&element,sizeof(element)) != sizeof(element)) {
+                                close_all(scl,sdl,new_file);
+                                err(1,"write error");
+                        }
+                }
+        }
+
+        if(read_size < 0) {
+                close_all(scl,sdl,new_file);
+                err(1,"read error");
+        }
+
+        close_all(scl,sdl,new_file);
+}

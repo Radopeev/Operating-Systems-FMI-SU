@@ -1,0 +1,94 @@
+#include <err.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
+
+int main(int argc,char* argv[]) {
+
+        const char* comm = "echo";
+
+        if(argc > 1) {
+                if(strlen(argv[1]) > 4) {
+                        errx(1,"invalid argument");
+                }
+                comm = argv[1];
+        }
+
+        char buff[64];
+        ssize_t bytes_read = read(0,buff,sizeof(buff) - 1);
+        if(bytes_read < 0) {
+                err(1,"read error");
+        }
+        buff[bytes_read]='\0';
+
+        int count = 0;
+        for(size_t i = 0;i < strlen(buff);i++) {
+                if(buff[i] == ' ' || buff[i] == '\n') {
+                        count++;
+                }
+        }
+
+        if(buff[strlen(buff) - 1] != ' ' && buff[strlen(buff) - 1] != '\n') {
+                count++;
+        }
+
+        char** words = (char**)malloc(count * sizeof(char*));
+        if(!words) {
+                err(1,"malloc error");
+        }
+
+
+        int index = 0;
+        int word_num = 0;
+        char word[5];
+        for(size_t i = 0;i < strlen(buff);i++) {
+                if(buff[i] == ' ' || buff[i] == '\n' || buff[i] == '\0') {
+                        if(index > 0){
+                                if(index > 4) {
+                                        free(words);
+                                        errx(1,"invalid argument");
+                                }
+                                word[index] = '\0';
+                                words[word_num] = strdup(word);
+                                if(!words[word_num]) {
+                                        free(words);
+                                }
+                                word_num++;
+                                index = 0;
+                        }
+                } else {
+                        word[index++] = buff[i];
+                }
+        }
+
+
+        for(int i = 0;i < count;i+=2) {
+                pid_t child = fork();
+                if(child < 0) {
+                        free(words);
+                        err(1,"fork error");
+                }
+
+                if(child == 0) {
+                        if(i + 1 < word_num) {
+                                execlp(comm,comm,words[i],words[i+1],(char*)NULL);
+                        } else {
+                                execlp(comm,comm,words[i],(char*)NULL);
+                        }
+                        free(words);
+                        err(1,"exec error");
+                }
+                wait(NULL);
+        }
+
+        for(int i = 0;i < word_num;i++) {
+                free(words[i]);
+        }
+
+        free(words);
+        return 0;
+}

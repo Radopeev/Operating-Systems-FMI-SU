@@ -1,0 +1,80 @@
+#include <fcntl.h>
+#include <unistd.h>
+#include <err.h>
+
+int main(int argc,char* argv[]) {
+        if(argc != 3) {
+                errx(1,"Args error");
+        }
+
+        int input = open(argv[1],O_RDONLY);
+        if(input < 0) {
+                err(1,"input open error");
+        }
+
+        int output = open(argv[2],O_WRONLY | O_CREAT | O_TRUNC);
+        if(output < 0) {
+                close(input);
+                err(1,"output open error");
+        }
+
+        int fds[2];
+        if(pipe(fds) == -1) {
+                close(input);
+                close(output);
+                err(1,"pipe error");
+        }
+
+        pid_t child = fork();
+        if(child == 0) {
+                close(fds[0]);
+                if(dup2(fds[1],1) < 0) {
+                        close(input);
+                        close(output);
+                        err(1,"dup2 error");
+                }
+
+                if(execlp("cat","cat",input,(char*)NULL) < 0) {
+                        close(input);
+                        close(output);
+                        err(1,"exec error");
+                }
+
+        }
+
+        close(fds[1]);
+
+        char key = 0x20;
+        char escape = 0x7D;
+        int bytes_read;
+        unsigned char b;
+        while((bytes_read = read(fds[0],&b,sizeof(b))) > 0) {
+                if(b == escape) {
+                        if(read(fds[0],&b,sizeof(b)) < 0) {
+                                close(input);
+                                close(output);
+                                err(1,"read error");
+                        }
+                        unsigned char byte_to_check = (b ^ key);
+
+                        if(byte_to_check == 0x00 || byte_to_check == 0xFF || byte_to_check == 0x55 || byte_to_check == 0x7D){
+                                if(write(output,&b,sizeof(b)) < 0) {
+                                        close(input);
+                                        close(output);
+                                        err(1,"write error");
+                                }
+                        }
+                }
+        }
+
+        if(bytes_read < 0) {
+                close(input);
+                close(output);
+                err(1,"read error");
+        }
+
+        close(input);
+        close(output);
+
+        return 0;
+}

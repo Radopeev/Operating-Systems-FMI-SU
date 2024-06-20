@@ -1,0 +1,79 @@
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+#include <err.h>
+#include <stdint.h>
+#include <stdio.h>
+
+static double average(int* arr, int size) {
+        int sum = 0;
+        for(int i = 0; i < size;i++) {
+                sum+=arr[i];
+        }
+
+        return sum/size;
+}
+
+static double dispersion(int* arr,int size) {
+        int sum = 0;
+        double avg = average(arr,size);
+
+        for(int i = 0;i < size;i++) {
+                sum += (arr[i] - avg) * (arr[i] - avg);
+        }
+
+        return sum/size;
+}
+
+typedef struct record{
+        uint32_t id;
+        uint16_t reserved[2];
+        uint32_t times[2];
+} record;
+
+int main(int argc,char* argv[]) {
+        if(argc != 2) {
+                errx(1,"asdsad");
+        }
+
+        int file = open(argv[1],O_RDONLY);
+        if(file < 0) {
+                err(1,"asdsad");
+        }
+
+        record records[16384];
+        int records_count = 0;
+        int  users[2048]={0};
+        int sessions[16384];
+        int bytes_read;
+        int session_count = 0;
+
+        while((bytes_read = read(file,&records[records_count],sizeof(record))) > 0) {
+                uint32_t start = records[records_count -1].times[0];
+                uint32_t end = records[records_count -1].times[1];
+                records_count++;
+                int time = end - start;
+                sessions[session_count++] = time;
+        }
+        close(file);
+
+        double all_dispersion = dispersion(sessions,session_count);
+        for(int i = 0;i < records_count;i++) {
+                uint32_t id = records[i].id;
+                int time = records[i].times[1] - records[i].times[0];
+
+                if(users[id] < time) {
+                        users[id] = time;
+                }
+        }
+
+        for(int i = 0;i < 2048;i++) {
+                if(users[i] != 0) {
+                        if((users[i] * users[i]) > all_dispersion) {
+                                dprintf(1,"%d",i);
+                                dprintf(1,"%d",users[i]);
+                        }
+                }
+        }
+}
+

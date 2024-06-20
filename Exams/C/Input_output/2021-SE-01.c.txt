@@ -1,0 +1,55 @@
+#include <stdint.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <err.h>
+
+static uint16_t encode(uint8_t num) {
+        uint16_t result = 0;
+        for(int i = 7;i >= 0;i--) {
+                int mask = 1 << i;
+                if(num & mask) {
+                        result = (result << 2) | 0x02;
+                } else {
+                        result = (result << 2) | 0x01;
+                }
+        }
+        return result;
+}
+
+
+int main(int argc,char* argv[]) {
+        if(argc != 3) {
+                errx(1,"args error");
+        }
+
+        int input = open(argv[1],O_RDONLY);
+        if(input < 0) {
+                err(1,"input error");
+        }
+
+        int output = open(argv[2],O_WRONLY | O_TRUNC | O_CREAT,0644);
+        if(output < 0) {
+                close(input);
+                err(1,"output error");
+        }
+
+        uint8_t byte;
+        int read_size;
+        while((read_size = read(input,&byte,sizeof(uint8_t))) > 0) {
+                uint16_t encoded = encode(byte);
+                if(write(output,&encoded,sizeof(uint16_t)) != sizeof(uint16_t)) {
+                        close(input);
+                        close(output);
+                        err(1,"write error");
+                }
+        }
+
+        if(read_size < 0) {
+                close(input);
+                close(output);
+                err(1,"read error");
+        }
+
+        close(input);
+        close(output);
+}

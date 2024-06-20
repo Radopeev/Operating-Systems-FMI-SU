@@ -1,0 +1,111 @@
+#include <unistd.h>
+#include <err.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+static void cut_by_char(char* line, char* range) {
+        size_t start, end;
+
+        char* dash = strchr(range, '-');
+        if(dash) {
+                *dash = '\0';
+                start = atoi(range);
+                end = atoi(dash + 1);
+
+                if(start > end || start < 1 || end > strlen(line)) {
+                        errx(1,"Invalid range");
+                }
+
+                for (size_t i = start - 1;i < end;i++) {
+                                if(write(1,&line[i],1) < 0) {
+                                        err(1,"asdsd");
+                                }
+                }
+        } else {
+                start = atoi(range);
+                if(start < 1 || start > strlen(line)) {
+                        err(1,"asdsad");
+                }
+
+                if(write(1,&line[start],1) < 0) {
+                        err(1,"asdsad");
+                }
+        }
+        char newLine = '\n';
+        write(1,&newLine,sizeof(char));
+}
+
+static void cut_by_field(char* line, char delimeter, char* range) {
+        size_t start,end;
+        char* fields[100];
+        size_t field_count = 0;
+
+        fields[field_count++] = line;
+        for(char* p = line;*p != '\0';p++) {
+                if(*p == delimeter) {
+                        *p = '\0';
+                        fields[field_count++] = p + 1;
+                }
+        }
+
+        char* dash = strchr(range,'-');
+        if(dash) {
+                *dash = '\0';
+                start = atoi(range);
+                end = atoi(dash + 1);
+
+                if(start > end || start < 1 || end > field_count) {
+                        errx(1,"adsd");
+                }
+
+                for(size_t i = start - 1; i < end;i++) {
+                        if(fields[i]) {
+                                if(write(1,fields[i], strlen(fields[i])) < 0) {
+                                        err(1,"sadsa");
+                                }
+                                if(i < end -1) {
+                                        if(write(1,&delimeter,1) < 0) {
+                                                err(1,"asdsad");
+                                        }
+                                }
+                        }
+                }
+        } else {
+                start = atoi(range);
+                if(start < 1 || start > field_count) {
+                        errx(1,"sadsad");
+                }
+                if(write(1,&fields[start - 1],strlen(fields[start -1])) < 0){
+                        err(1,"write error");
+                }
+        }
+        char newLine = '\n';
+        write(1,&newLine,sizeof(char));
+}
+
+
+int main(int argc,char* argv[]) {
+        if(argc < 3) {
+                errx(1,"asdsad");
+        }
+
+        char buff[1024];
+        ssize_t bytesRead = read(0,buff,sizeof(buff) - 1);
+        if(bytesRead < 0) {
+                err(1,"adsad");
+        }
+
+        buff[bytesRead] = '\0';
+        buff[strcspn(buff,"\n")] = '\0';
+
+        if(strcmp(argv[1], "-c") == 0) {
+                cut_by_char(buff,argv[2]);
+        } else if(strcmp(argv[1],"-d") == 0 && argc == 5 && strcmp(argv[3],"-f") == 0) {
+                cut_by_field(buff,argv[2][0],argv[4]);
+        } else {
+                errx(1,"asdsd");
+        }
+
+        return 0;
+}
